@@ -42,7 +42,7 @@ export default {
   data() {
     return {
       name: '',
-      domain: '@geene.ipwangxin.cn',
+      domain: '@mail.ipwangxin.cn',
       timer: {
         rest: 0,
         timer: null
