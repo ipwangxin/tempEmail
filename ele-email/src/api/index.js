@@ -14,7 +14,7 @@ export function refreshEmail(name) {
 }
 export function registerEmail(name, old) {
   return request({
-    url: `/email/validate/${name}?`,
+    url: `/email/register/${name}?`,
     method: 'get',
     params: { old }
   })

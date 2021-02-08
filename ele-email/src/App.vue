@@ -15,12 +15,15 @@
             <el-button @click="open">自定义</el-button>
           </div>
           <div class="refresh">
-            <el-button icon="el-icon-refresh" @click="$refs.main.reverTime(name)"></el-button>
+            <div class="reverse">{{timer.rest}}s</div>
+            <el-tooltip class="item" slot="prepend" effect="dark" content="刷新列表" placement="top-start">
+              <el-button icon="el-icon-refresh" @click="$refs.main.reverTime(name,timer)"></el-button>
+            </el-tooltip>
           </div>
         </div>
       </el-header>
       <el-main>
-        <mainApp :name="name" ref="main"></mainApp>
+        <mainApp :name="name" :ptimer="timer" ref="main"></mainApp>
       </el-main>
     </el-container>
   </div>
@@ -29,7 +32,6 @@
 <script>
 import mainApp from './components/mainApp.vue'
 import handleClipboard from '@/utils/clipboard'
-import jsCookie from 'js-cookie'
 import { createEmail, registerEmail } from '@/api'
 const TEMPKEY = 'tempName'
 export default {
@@ -40,11 +42,15 @@ export default {
   data() {
     return {
       name: '',
-      domain: '@geene.ipwangxin.cn'
+      domain: '@geene.ipwangxin.cn',
+      timer: {
+        rest: 0,
+        timer: null
+      }
     }
   },
   mounted() {
-    const name = jsCookie.get(TEMPKEY)
+    const name = sessionStorage.getItem(TEMPKEY)
     if (name) {
       this.name = name
     } else {
@@ -57,7 +63,7 @@ export default {
     },
     newEmail() {
       createEmail().then(res => {
-        jsCookie.set(TEMPKEY, res.data, { expires: 1 })
+        sessionStorage.setItem(TEMPKEY, res.data)
         this.name = res.data
       })
     },
@@ -70,8 +76,7 @@ export default {
         inputErrorMessage: '格式不正确'
       }).then(({ value }) => {
         registerEmail(value, this.name).then(res => {
-          jsCookie.set(TEMPKEY, value, { expires: 1 })
-          // localStorage.setItem(TEMPKEY, value)
+          sessionStorage.setItem(TEMPKEY, value)
           this.name = value
         }).catch(e => {
           this.$message.error('当前邮箱不可用，请重新输入')
@@ -108,6 +113,7 @@ header.el-header {
   background-color: #e9eef3;
   color: #333;
   text-align: center;
+  min-height: calc(100vh - 60px);
   // line-height: 160px;
 }
 ::v-deep div.el-input-group {
@@ -122,6 +128,15 @@ header.el-header {
   align-items: center;
 }
 .refresh {
+  display: flex;
+  align-items: center;
+
+  .reverse {
+    background: #fff;
+    padding: 6px;
+    margin-right: 10px;
+    border-radius: 30px;
+  }
   ::v-deep .el-button {
     padding: 10px;
     line-height: auto;

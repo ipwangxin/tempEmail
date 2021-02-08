@@ -14,15 +14,15 @@
       </el-table-column>
       <el-table-column label="操作" width="80" align="center">
         <template slot-scope="scope">
-          <el-button size="mini" @click="handleView(scope.row.htmlContent)">查看</el-button>
+          <el-button size="mini" @click="handleView(scope.row)">查看</el-button>
         </template>
       </el-table-column>
     </el-table>
-    <el-dialog title="内容" :visible.sync="content" width="60%">
-      <div v-html="content"></div>
+    <el-dialog :title="subject" :visible.sync="show" width="60%">
+      <div class="text-left" v-html="content"></div>
       <span slot="footer" class="dialog-footer">
-        <el-button @click="content = ''">取 消</el-button>
-        <el-button type="primary" @click="content = ''">确 定</el-button>
+        <el-button @click="show = false">取 消</el-button>
+        <el-button type="primary" @click="show = false">确 定</el-button>
       </span>
     </el-dialog>
   </div>
@@ -34,19 +34,22 @@ import xss from 'xss'
 export default {
   name: 'MainApp',
   props: {
-    name: String
+    name: String,
+    ptimer: Object
   },
   data() {
     return {
       tableData: [],
-      content: ''
+      content: '',
+      subject: '',
+      show: false
     }
   },
   watch: {
     name: {
       handler(ne) {
         if (ne) {
-          this.reverTime(ne)
+          this.reverTime(ne, this.ptimer)
         }
       }
     }
@@ -57,18 +60,30 @@ export default {
         this.tableData = res.data
       })
     },
-    reverTime(name) {
+    reverTime(name, timer) {
       if (this.timer) {
         clearInterval(this.timer)
         this.timer = null
       }
       this.getListByEmail(name)
+      timer.rest = 9
+      clearInterval(timer.timer)
+      timer.timer = setInterval(() => {
+        timer.rest--
+      }, 1000)
       this.timer = setInterval(() => {
+        timer.rest = 9
+        clearInterval(timer.timer)
+        timer.timer = setInterval(() => {
+          timer.rest--
+        }, 1000)
         this.getListByEmail(name)
       }, 10000)
     },
     handleView(con) {
-      this.content = xss(con)
+      this.content = xss(con.content)
+      this.subject = con.subject
+      this.show = true
     }
   }
 }
@@ -76,4 +91,7 @@ export default {
 
 <!-- Add "scoped" attribute to limit CSS to this component only -->
 <style scoped lang="scss">
+.text-left {
+  text-align: left;
+}
 </style>

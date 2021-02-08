@@ -35,6 +35,7 @@ service.interceptors.response.use(
     }
     if (res.code !== 200 || response.status !== 200) {
       message.error(res.msg)
+      return Promise.reject(res)
     } else {
       return res
     }
