@@ -15,15 +15,15 @@
             <el-button @click="open">自定义</el-button>
           </div>
           <div class="refresh">
-            <div class="reverse">{{timer.rest}}s</div>
+            <!-- <div class="reverse">{{timer.rest}}s</div> -->
             <el-tooltip class="item" slot="prepend" effect="dark" content="刷新列表" placement="top-start">
-              <el-button icon="el-icon-refresh" @click="$refs.main.reverTime(name,timer)"></el-button>
+              <el-button icon="el-icon-refresh" @click="$ws.dispatchEvent('LIST_MAIL')"></el-button>
             </el-tooltip>
           </div>
         </div>
       </el-header>
       <el-main>
-        <mainApp :name="name" :ptimer="timer" ref="main"></mainApp>
+        <mainApp :name="name" ref="main"></mainApp>
       </el-main>
     </el-container>
   </div>
@@ -32,7 +32,7 @@
 <script>
 import mainApp from './components/mainApp.vue'
 import handleClipboard from '@/utils/clipboard'
-import { createEmail, registerEmail } from '@/api'
+// import { createEmail, registerEmail } from '@/api'
 const TEMPKEY = 'tempName'
 export default {
   name: 'App',
@@ -42,7 +42,7 @@ export default {
   data() {
     return {
       name: '',
-      domain: '@mail.ipwangxin.cn',
+      domain: '',
       timer: {
         rest: 0,
         timer: null
@@ -51,21 +51,31 @@ export default {
   },
   mounted() {
     const name = sessionStorage.getItem(TEMPKEY)
+    this.$ws.sub({
+      GEN_USER: this.dealGen,
+      REFRESH: this.dealGen,
+      DOMAIN_NAME: this.dealDomain
+    })
     if (name) {
+      this.$ws.dispatchEvent('REGISTER', { userName: name })
       this.name = name
     } else {
-      this.newEmail()
+      this.$ws.dispatchEvent('GEN_USER')
     }
   },
   methods: {
     goCopy(e) {
       handleClipboard(this.name + this.domain, e)
     },
+    dealDomain(data) {
+      this.domain = `@${data}`
+    },
     newEmail() {
-      createEmail().then(res => {
-        sessionStorage.setItem(TEMPKEY, res.data)
-        this.name = res.data
-      })
+      this.$ws.dispatchEvent('REFRESH')
+    },
+    dealGen(data) {
+      sessionStorage.setItem(TEMPKEY, data)
+      this.name = data
     },
     open() {
       this.$prompt('请输入邮箱', '提示', {
@@ -75,12 +85,10 @@ export default {
         inputPattern: /[a-zA-Z0-9_]{1,20}/,
         inputErrorMessage: '格式不正确'
       }).then(({ value }) => {
-        registerEmail(value, this.name).then(res => {
-          sessionStorage.setItem(TEMPKEY, value)
-          this.name = value
-        }).catch(e => {
-          this.$message.error('当前邮箱不可用，请重新输入')
-        })
+        this.$ws.dispatchEvent('REGISTER', { userName: value })
+        this.name = value
+        sessionStorage.setItem(TEMPKEY, value)
+        this.$ws.dispatchEvent('LIST_MAIL')
       }).catch(e => {
         console.log(e)
       })

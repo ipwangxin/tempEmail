@@ -9,7 +9,7 @@
       </el-table-column>
       <el-table-column label="发送者" min-width="180" show-overflow-tooltip>
         <template slot-scope="scope">
-          <span style="margin-left: 10px">{{ scope.row.fromUser }}</span>
+          <span style="margin-left: 10px">{{ scope.row.messageFromUser }}</span>
         </template>
       </el-table-column>
       <el-table-column label="操作" width="80" align="center">
@@ -29,13 +29,12 @@
 </template>
 
 <script>
-import { getEmailList } from '@/api'
+// import { getEmailList } from '@/api'
 import xss from 'xss'
 export default {
   name: 'MainApp',
   props: {
-    name: String,
-    ptimer: Object
+    name: String
   },
   data() {
     return {
@@ -45,40 +44,21 @@ export default {
       show: false
     }
   },
-  watch: {
-    name: {
-      handler(ne) {
-        if (ne) {
-          this.reverTime(ne, this.ptimer)
-        }
-      }
-    }
+  created() {
+    this.$ws.sub({
+      NEW_EMAIL: this.newEmail,
+      LIST_MAIL: this.listMail
+    })
+    setTimeout(() => {
+      this.$ws.dispatchEvent('LIST_MAIL')
+    })
   },
   methods: {
-    getListByEmail(name) {
-      getEmailList(name).then(res => {
-        this.tableData = res.data
-      })
+    listMail(data) {
+      this.tableData = data
     },
-    reverTime(name, timer) {
-      if (this.timer) {
-        clearInterval(this.timer)
-        this.timer = null
-      }
-      this.getListByEmail(name)
-      timer.rest = 9
-      clearInterval(timer.timer)
-      timer.timer = setInterval(() => {
-        timer.rest--
-      }, 1000)
-      this.timer = setInterval(() => {
-        timer.rest = 9
-        clearInterval(timer.timer)
-        timer.timer = setInterval(() => {
-          timer.rest--
-        }, 1000)
-        this.getListByEmail(name)
-      }, 10000)
+    newEmail(data) {
+      this.tableData.unshift(data)
     },
     handleView(con) {
       this.content = xss(con.content)
