@@ -80,6 +80,11 @@ export default {
 
 <!-- Add "scoped" attribute to limit CSS to this component only -->
 <style scoped lang="scss">
+.content {
+  position: relative;
+  z-index: 1;
+  opacity: 0.9;
+}
 .text-left {
   text-align: left;
 }

@@ -122,7 +122,20 @@ header.el-header {
   color: #333;
   text-align: center;
   min-height: calc(100vh - 60px);
-  // line-height: 160px;
+  position: relative;
+  &::after {
+    position: absolute;
+    content: ' ';
+    width: 100%;
+    background: url(./assets/cat1.jpg) no-repeat;
+    background-position: center;
+    background-size: cover;
+    opacity: 0.2;
+    // z-index: 1;
+    left: 0;
+    height: 100%;
+    top: 0;
+  }
 }
 ::v-deep div.el-input-group {
   width: auto;
