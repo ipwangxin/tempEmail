@@ -1,5 +1,5 @@
 <template>
-  <div class="content">
+  <div class="cus_content">
     <el-table :data="tableData" style="width: 100%">
       <el-table-column label="#" type="index" width="50" align="center"></el-table-column>
       <el-table-column label="主题" min-width="140" show-overflow-tooltip align="center">
@@ -23,7 +23,7 @@
         </template>
       </el-table-column>
     </el-table>
-    <el-dialog :title="con.subject" :visible.sync="show" width="60%">
+    <el-dialog :title="con.subject" :visible.sync="show" width="60%" append-to-body>
       <div class="text-left" v-html="content"></div>
       <div class="time_class">
         <span style="font-weight:600">接收时间:&nbsp;</span>
@@ -80,7 +80,7 @@ export default {
 
 <!-- Add "scoped" attribute to limit CSS to this component only -->
 <style scoped lang="scss">
-.content {
+.cus_content {
   position: relative;
   z-index: 1;
   opacity: 0.9;
