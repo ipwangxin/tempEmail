@@ -1,20 +1,35 @@
 <template>
   <div class="cus_content">
     <el-table :data="tableData" style="width: 100%">
-      <el-table-column label="#" type="index" width="50" align="center"></el-table-column>
-      <el-table-column label="主题" min-width="140" show-overflow-tooltip align="center">
+      <el-table-column
+        label="#"
+        type="index"
+        width="50"
+        align="center"
+      ></el-table-column>
+      <el-table-column
+        label="主题"
+        min-width="140"
+        show-overflow-tooltip
+        align="center"
+      >
         <template slot-scope="scope">
           <span style="margin-left: 10px">{{ scope.row.subject }}</span>
         </template>
       </el-table-column>
-      <el-table-column label="发送者" min-width="180" show-overflow-tooltip header-align="center">
+      <el-table-column
+        label="发送者"
+        min-width="180"
+        show-overflow-tooltip
+        header-align="center"
+      >
         <template slot-scope="scope">
           <span style="margin-left: 10px">{{ scope.row.messageFromUser }}</span>
         </template>
       </el-table-column>
       <el-table-column label="接收时间" align="center" min-width="120">
         <template slot-scope="scope">
-          <span>{{ scope.row.receivedTime | local}}</span>
+          <span>{{ scope.row.receivedTime | local }}</span>
         </template>
       </el-table-column>
       <el-table-column label="操作" width="80" align="center">
@@ -23,12 +38,22 @@
         </template>
       </el-table-column>
     </el-table>
-    <el-dialog :title="con.subject" :visible.sync="show" width="60%" append-to-body>
-      <div class="text-left" v-html="content"></div>
-      <div class="time_class">
-        <span style="font-weight:600">接收时间:&nbsp;</span>
-        <span>{{con.receivedTime |local}}</span>
-      </div>
+    <el-dialog
+      :title="con.subject"
+      :visible.sync="show"
+      width="60%"
+      append-to-body
+    >
+      <template v-if="useIframe">
+        <iframe style="width:100%;height:50vh" :srcdoc="con.content" sandbox="allow-scripts" frameborder="0"></iframe>
+      </template>
+      <template v-else>
+        <div class="text-left" v-html="content"></div>
+        <div class="time_class">
+          <span style="font-weight:600">接收时间:&nbsp;</span>
+          <span>{{ con.receivedTime | local }}</span>
+        </div>
+      </template>
       <span slot="footer" class="dialog-footer">
         <el-button @click="show = false">取 消</el-button>
         <el-button type="primary" @click="show = false">确 定</el-button>
@@ -51,6 +76,12 @@ export default {
       content: '',
       con: '',
       show: false
+    }
+  },
+  computed: {
+    useIframe() {
+      const content = this.con && this.con.content
+      return (content || '').indexOf('</html>') > -1
     }
   },
   created() {
