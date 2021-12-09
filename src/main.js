@@ -24,6 +24,12 @@ Vue.filter('local', function (time) {
   var d = now.getDate()
   return y + '-' + (m < 10 ? '0' + m : m) + '-' + (d < 10 ? '0' + d : d) + ' ' + now.toTimeString().substr(0, 8)
 })
+// window.localStorage.setItem = function (...arg) {
+//   const setItem = localStorage.setItem
+//   // eslint-disable-next-line no-console
+//   console.log(arg)
+//   setItem(...arg)
+// }
 
 new Vue({
   render: h => h(App)

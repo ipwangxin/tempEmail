@@ -5,19 +5,50 @@
         <div class="content mail_header">
           <img alt="mail" height="60px" src="./assets/logo.svg" />
           <div>
+            <el-popover placement="bottom-start" width="400" trigger="click" v-model="pop">
+              <div>
+                <div v-for="em in emails" class="email_option" :key="em" @click="switchTo(em)">
+                  {{ em }}{{ domain }}
+                </div>
+              </div>
+              <el-button slot="reference" style="margin-right:5px;"
+                >历史</el-button
+              >
+            </el-popover>
             <el-input align="right" disabled v-model="name">
-              <el-tooltip class="item" slot="prepend" effect="dark" content="复制邮箱" placement="top-start">
-                <el-button icon="el-icon-copy-document" @click="goCopy"></el-button>
+              <el-tooltip
+                class="item"
+                slot="prepend"
+                effect="dark"
+                content="复制邮箱"
+                placement="top-start"
+              >
+                <el-button
+                  icon="el-icon-copy-document"
+                  @click="goCopy"
+                ></el-button>
               </el-tooltip>
-              <template slot="append">{{domain}}</template>
+              <template slot="append">{{ domain }}</template>
             </el-input>
-            <el-button class="mgl-5" @click="newEmail" type="primary">新邮箱</el-button>
+
+            <el-button class="mgl-5" @click="newEmail" type="primary"
+              >新邮箱</el-button
+            >
             <el-button @click="open">自定义</el-button>
           </div>
           <div class="refresh">
             <!-- <div class="reverse">{{timer.rest}}s</div> -->
-            <el-tooltip class="item" slot="prepend" effect="dark" content="刷新列表" placement="top-start">
-              <el-button icon="el-icon-refresh" @click="$ws.dispatchEvent('LIST_MAIL')"></el-button>
+            <el-tooltip
+              class="item"
+              slot="prepend"
+              effect="dark"
+              content="刷新列表"
+              placement="top-start"
+            >
+              <el-button
+                icon="el-icon-refresh"
+                @click="$ws.dispatchEvent('LIST_MAIL')"
+              ></el-button>
             </el-tooltip>
           </div>
         </div>
@@ -32,6 +63,7 @@
 <script>
 import mainApp from './components/mainApp.vue'
 import handleClipboard from '@/utils/clipboard'
+
 // import { createEmail, registerEmail } from '@/api'
 const TEMPKEY = 'tempName'
 export default {
@@ -41,24 +73,35 @@ export default {
   },
   data() {
     return {
+      pop: false,
       name: '',
       domain: '',
+      emails: [],
       timer: {
         rest: 0,
         timer: null
       }
     }
   },
+  created() {
+    window.addEventListener('storage', this.changeEmail)
+  },
   mounted() {
-    const name = sessionStorage.getItem(TEMPKEY)
+    let nameArr = []
+    try {
+      nameArr = JSON.parse(localStorage.getItem(TEMPKEY))
+    } catch (e) {
+
+    }
     this.$ws.sub({
       GEN_USER: this.dealGen,
       REFRESH: this.dealGen,
       DOMAIN_NAME: this.dealDomain
     })
-    if (name) {
-      this.$ws.dispatchEvent('REGISTER', { userName: name })
-      this.name = name
+    if (nameArr && nameArr[0]) {
+      this.$ws.dispatchEvent('REGISTER', { userName: nameArr[0] })
+      this.emails = nameArr
+      this.name = nameArr[0]
     } else {
       this.$ws.dispatchEvent('GEN_USER')
     }
@@ -67,15 +110,59 @@ export default {
     goCopy(e) {
       handleClipboard(this.name + this.domain, e)
     },
+    switchTo(value) {
+      this.pop = false
+      this.$ws.dispatchEvent('REGISTER', { userName: value })
+      this.name = value
+      const arr = this.combineEmail(value)
+      this.emails = arr
+      localStorage.setItem(TEMPKEY, JSON.stringify(arr))
+      this.$ws.dispatchEvent('LIST_MAIL')
+    },
     dealDomain(data) {
       this.domain = `@${data}`
+    },
+    changeEmail(evt) {
+      if (evt.key === TEMPKEY) {
+        this.appendNewValue(evt.newValue[0])
+      }
+    },
+    appendNewValue() {
+      this.emails = []
+      try {
+        this.emails = JSON.parse(localStorage.getItem(TEMPKEY))
+      } catch (e) {
+
+      }
     },
     newEmail() {
       this.$ws.dispatchEvent('REFRESH')
     },
     dealGen(data) {
-      sessionStorage.setItem(TEMPKEY, data)
+      const arr = this.combineEmail(data)
+      localStorage.setItem(TEMPKEY, JSON.stringify(arr))
+      this.appendNewValue()
       this.name = data
+    },
+    combineEmail(data) {
+      let arr = []
+      try {
+        arr = JSON.parse(localStorage.getItem(TEMPKEY))
+        if (typeof arr === 'string') {
+          arr = [arr]
+        }
+      } catch (e) {
+
+      }
+      const index = arr.indexOf(data)
+      if (index > -1) {
+        arr.splice(index, 1)
+      }
+      arr = [data, ...arr]
+      if (arr.length > 5) {
+        arr.length = 5
+      }
+      return arr
     },
     open() {
       this.$prompt('请输入邮箱', '提示', {
@@ -84,17 +171,21 @@ export default {
         inputPlaceholder: '输入邮箱前半部分',
         inputPattern: /[a-zA-Z0-9_]{1,20}/,
         inputErrorMessage: '格式不正确'
-      }).then(({ value }) => {
-        this.$ws.dispatchEvent('REGISTER', { userName: value })
-        this.name = value
-        sessionStorage.setItem(TEMPKEY, value)
-        this.$ws.dispatchEvent('LIST_MAIL')
-      }).catch(e => {
-        console.log(e)
       })
+        .then(({ value }) => {
+          value = value.toString()
+          this.$ws.dispatchEvent('REGISTER', { userName: value })
+          this.name = value
+          const arr = this.combineEmail(value)
+          this.emails = arr
+          localStorage.setItem(TEMPKEY, JSON.stringify(arr))
+          this.$ws.dispatchEvent('LIST_MAIL')
+        })
+        .catch(e => {
+          console.log(e)
+        })
     }
   }
-
 }
 </script>
 
@@ -125,7 +216,7 @@ header.el-header {
   position: relative;
   &::after {
     position: absolute;
-    content: ' ';
+    content: " ";
     width: 100%;
     background: url(./assets/cat1.jpg) no-repeat;
     background-position: center;
@@ -135,6 +226,20 @@ header.el-header {
     left: 0;
     height: 100%;
     top: 0;
+  }
+}
+.email_option {
+  line-height: 40px;
+  text-align: right;
+  cursor: pointer;
+  padding-right: 20px;
+  // letter-space: 10px;
+  letter-spacing: 1px;
+  &:hover {
+    background: #eee;
+  }
+  & + .email_option {
+    border-top: 1px solid #eee;
   }
 }
 ::v-deep div.el-input-group {
