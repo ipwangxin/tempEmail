@@ -5,7 +5,7 @@
         <div class="content mail_header">
           <img alt="mail" height="60px" src="./assets/logo.svg" />
           <div>
-            <el-popover placement="bottom-start" width="400" trigger="click" v-model="pop">
+            <el-popover placement="bottom-start" v-if="emails.length > 1" width="400" trigger="click" v-model="pop">
               <div>
                 <div v-for="em in emails" class="email_option" :key="em" @click="switchTo(em)">
                   {{ em }}{{ domain }}
@@ -147,7 +147,7 @@ export default {
     combineEmail(data) {
       let arr = []
       try {
-        arr = JSON.parse(localStorage.getItem(TEMPKEY))
+        arr = JSON.parse(localStorage.getItem(TEMPKEY)) || []
         if (typeof arr === 'string') {
           arr = [arr]
         }

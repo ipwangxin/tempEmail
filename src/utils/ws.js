@@ -124,4 +124,4 @@ class Wsclass {
   }
 }
 
-export default new Wsclass('wss://ipwangxin.cn/ws/email')
+export default new Wsclass('wss://mail.ipwangxin.cn/ws/email')
